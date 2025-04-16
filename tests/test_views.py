@@ -299,8 +299,8 @@ class VerifyJSONWebTokenTestsSymmetric(TokenTestCase):
         response = client.post('/auth-token-verify/', {'token': token},
                                format='json')
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertRegexpMatches(response.data['non_field_errors'][0],
-                                 'Signature has expired')
+        self.assertRegex(response.data['non_field_errors'][0],
+                         'Signature has expired')
 
     def test_verify_jwt_fails_with_bad_token(self):
         """
@@ -313,8 +313,8 @@ class VerifyJSONWebTokenTestsSymmetric(TokenTestCase):
         response = client.post('/auth-token-verify/', {'token': token},
                                format='json')
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertRegexpMatches(response.data['non_field_errors'][0],
-                                 'Error decoding signature')
+        self.assertRegex(response.data['non_field_errors'][0],
+                         'Error decoding signature')
 
     def test_verify_jwt_fails_with_missing_user(self):
         """
@@ -332,8 +332,8 @@ class VerifyJSONWebTokenTestsSymmetric(TokenTestCase):
         response = client.post('/auth-token-verify/', {'token': token},
                                format='json')
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertRegexpMatches(response.data['non_field_errors'][0],
-                                 "User doesn't exist")
+        self.assertRegex(response.data['non_field_errors'][0],
+                         "User doesn't exist")
 
 
 class VerifyJSONWebTokenTestsAsymmetric(TokenTestCase):
@@ -382,8 +382,8 @@ class VerifyJSONWebTokenTestsAsymmetric(TokenTestCase):
         response = client.post('/auth-token-verify/', {'token': token},
                                format='json')
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertRegexpMatches(response.data['non_field_errors'][0],
-                                 'Signature has expired')
+        self.assertRegex(response.data['non_field_errors'][0],
+                         'Signature has expired')
 
     def test_verify_jwt_fails_with_bad_token(self):
         """
@@ -397,8 +397,8 @@ class VerifyJSONWebTokenTestsAsymmetric(TokenTestCase):
         response = client.post('/auth-token-verify/', {'token': token},
                                format='json')
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertRegexpMatches(response.data['non_field_errors'][0],
-                                 'Error decoding signature')
+        self.assertRegex(response.data['non_field_errors'][0],
+                         'Error decoding signature')
 
     def test_verify_jwt_fails_with_bad_pvt_key(self):
         """
@@ -422,8 +422,8 @@ class VerifyJSONWebTokenTestsAsymmetric(TokenTestCase):
                                format='json')
 
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertRegexpMatches(response.data['non_field_errors'][0],
-                                 'Error decoding signature')
+        self.assertRegex(response.data['non_field_errors'][0],
+                         'Error decoding signature')
 
     def tearDown(self):
         # Restore original settings
@@ -466,7 +466,7 @@ class RefreshJSONWebTokenTests(TokenTestCase):
         new_token_decoded = utils.jwt_decode_handler(new_token)
 
         # Make sure 'orig_iat' on the new token is same as original
-        self.assertEquals(new_token_decoded['orig_iat'], orig_iat)
+        self.assertEqual(new_token_decoded['orig_iat'], orig_iat)
         self.assertGreater(new_token_decoded['exp'], orig_token_decoded['exp'])
 
     def test_refresh_jwt_after_refresh_expiration(self):
