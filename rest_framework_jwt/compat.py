@@ -1,8 +1,8 @@
 import rest_framework
-from distutils.version import StrictVersion
+from packaging.version import Version
 
 
-if StrictVersion(rest_framework.VERSION) < StrictVersion('3.0.0'):
+if Version(rest_framework.VERSION) < Version('3.0.0'):
     from rest_framework.serializers import Serializer
 else:
     class Serializer(rest_framework.serializers.Serializer):

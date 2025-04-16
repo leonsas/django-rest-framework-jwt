@@ -43,29 +43,6 @@ def pytest_configure():
     )
 
     try:
-        import oauth_provider  # NOQA
-        import oauth2  # NOQA
-    except ImportError:
-        pass
-    else:
-        settings.INSTALLED_APPS += (
-            'oauth_provider',
-        )
-
-    try:
-        if django.VERSION >= (1, 8):
-            # django-oauth2-provider does not support Django1.8
-            raise ImportError
-        import provider  # NOQA
-    except ImportError:
-        pass
-    else:
-        settings.INSTALLED_APPS += (
-            'provider',
-            'provider.oauth2',
-        )
-
-    try:
         import django
         django.setup()
     except AttributeError:

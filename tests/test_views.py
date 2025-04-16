@@ -4,8 +4,7 @@ from datetime import datetime, timedelta
 from django import get_version
 from django.test import TestCase
 from django.test.utils import override_settings
-from django.utils import unittest
-from django.conf.urls import patterns
+from django.urls import re_path
 from django.contrib.auth import get_user_model
 
 from freezegun import freeze_time
@@ -13,22 +12,22 @@ from freezegun import freeze_time
 from rest_framework import status
 from rest_framework.test import APIClient
 
-from rest_framework_jwt import utils
+from rest_framework_jwt import utils, views
 from rest_framework_jwt.settings import api_settings, DEFAULTS
 
 from . import utils as test_utils
+
+import unittest
 
 User = get_user_model()
 
 NO_CUSTOM_USER_MODEL = 'Custom User Model only supported after Django 1.5'
 
-urlpatterns = patterns(
-    '',
-    (r'^auth-token/$', 'rest_framework_jwt.views.obtain_jwt_token'),
-    (r'^auth-token-refresh/$', 'rest_framework_jwt.views.refresh_jwt_token'),
-    (r'^auth-token-verify/$', 'rest_framework_jwt.views.verify_jwt_token'),
-
-)
+urlpatterns = [
+    re_path(r'^auth-token/$', views.obtain_jwt_token),
+    re_path(r'^auth-token-refresh/$', views.refresh_jwt_token),
+    re_path(r'^auth-token-verify/$', views.verify_jwt_token),
+]
 
 orig_datetime = datetime
 
@@ -52,8 +51,14 @@ class BaseTestCase(TestCase):
 class TestCustomResponsePayload(BaseTestCase):
 
     def setUp(self):
-        api_settings.JWT_RESPONSE_PAYLOAD_HANDLER = test_utils\
-            .jwt_response_payload_handler
+        import rest_framework_jwt.views as jwt_views
+        def custom_jwt_response_payload_handler(token, user=None, request=None):
+            return {
+                'token': token,
+                'user': user.username if user else None
+            }
+        self._old_handler = jwt_views.jwt_response_payload_handler
+        jwt_views.jwt_response_payload_handler = custom_jwt_response_payload_handler
         return super(TestCustomResponsePayload, self).setUp()
 
     def test_jwt_login_custom_response_json(self):
@@ -71,8 +76,8 @@ class TestCustomResponsePayload(BaseTestCase):
         self.assertEqual(response.data['user'], self.username)
 
     def tearDown(self):
-        api_settings.JWT_RESPONSE_PAYLOAD_HANDLER =\
-            DEFAULTS['JWT_RESPONSE_PAYLOAD_HANDLER']
+        import rest_framework_jwt.views as jwt_views
+        jwt_views.jwt_response_payload_handler = self._old_handler
 
 
 class ObtainJSONWebTokenTests(BaseTestCase):
@@ -265,8 +270,8 @@ class VerifyJSONWebTokenTests(TokenTestCase):
         response = client.post('/auth-token-verify/', {'token': token},
                                format='json')
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertRegexpMatches(response.data['non_field_errors'][0],
-                                 'Signature has expired')
+        self.assertRegex(response.data['non_field_errors'][0],
+                         'Signature has expired')
 
     def test_verify_jwt_fails_with_bad_token(self):
         """
@@ -279,8 +284,8 @@ class VerifyJSONWebTokenTests(TokenTestCase):
         response = client.post('/auth-token-verify/', {'token': token},
                                format='json')
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertRegexpMatches(response.data['non_field_errors'][0],
-                                 'Error decoding signature')
+        self.assertRegex(response.data['non_field_errors'][0],
+                         'Error decoding signature')
 
     def test_verify_jwt_fails_with_missing_user(self):
         """
@@ -298,8 +303,8 @@ class VerifyJSONWebTokenTests(TokenTestCase):
         response = client.post('/auth-token-verify/', {'token': token},
                                format='json')
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertRegexpMatches(response.data['non_field_errors'][0],
-                                 "User doesn't exist")
+        self.assertRegex(response.data['non_field_errors'][0],
+                         "User doesn't exist")
 
 
 class RefreshJSONWebTokenTests(TokenTestCase):
@@ -335,7 +340,7 @@ class RefreshJSONWebTokenTests(TokenTestCase):
             new_token_decoded = utils.jwt_decode_handler(new_token)
 
         # Make sure 'orig_iat' on the new token is same as original
-        self.assertEquals(new_token_decoded['orig_iat'], orig_iat)
+        self.assertEqual(new_token_decoded['orig_iat'], orig_iat)
         self.assertGreater(new_token_decoded['exp'], orig_token_decoded['exp'])
 
     def test_refresh_jwt_after_refresh_expiration(self):

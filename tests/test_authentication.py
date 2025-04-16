@@ -1,34 +1,10 @@
 from django.http import HttpResponse
 from django.test import TestCase
-from django.utils import unittest
-from django.conf.urls import patterns
+import unittest
+from django.urls import re_path
 from django.contrib.auth import get_user_model
 
 from rest_framework import permissions, status
-try:
-    from rest_framework_oauth.authentication import OAuth2Authentication
-except ImportError:
-    try:
-        from rest_framework.authentication import OAuth2Authentication
-    except ImportError:
-        OAuth2Authentication = None
-try:
-    try:
-        from rest_framework_oauth.compat import oauth2_provider
-        from rest_framework_oauth.compat.oauth2_provider import oauth2
-    except ImportError:
-        # if oauth2 module can not be imported, skip the tests,
-        # because models have not been initialized.
-        oauth2_provider = None
-except ImportError:
-    try:
-        from rest_framework.compat import oauth2_provider
-        from rest_framework.compat.oauth2_provider import oauth2  # NOQA
-    except ImportError:
-        # if oauth2 module can not be imported, skip the tests,
-        # because models have not been initialized.
-        oauth2_provider = None
-
 from rest_framework.test import APIRequestFactory, APIClient
 from rest_framework.views import APIView
 
@@ -37,8 +13,6 @@ from rest_framework_jwt.settings import api_settings, DEFAULTS
 from rest_framework_jwt.authentication import JSONWebTokenAuthentication
 
 User = get_user_model()
-
-DJANGO_OAUTH2_PROVIDER_NOT_INSTALLED = 'django-oauth2-provider not installed'
 
 factory = APIRequestFactory()
 
@@ -53,19 +27,10 @@ class MockView(APIView):
         return HttpResponse({'a': 1, 'b': 2, 'c': 3})
 
 
-urlpatterns = patterns(
-    '',
-    (r'^jwt/$', MockView.as_view(
-     authentication_classes=[JSONWebTokenAuthentication])),
-
-    (r'^jwt-oauth2/$', MockView.as_view(
-        authentication_classes=[
-            JSONWebTokenAuthentication, OAuth2Authentication])),
-
-    (r'^oauth2-jwt/$', MockView.as_view(
-        authentication_classes=[
-            OAuth2Authentication, JSONWebTokenAuthentication])),
-)
+urlpatterns = [
+    re_path(r'^jwt/$', MockView.as_view(
+        authentication_classes=[JSONWebTokenAuthentication])),
+]
 
 
 class JSONWebTokenAuthenticationTests(TestCase):
@@ -187,50 +152,6 @@ class JSONWebTokenAuthenticationTests(TestCase):
         self.assertEqual(response.data['detail'], msg)
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
         self.assertEqual(response['WWW-Authenticate'], 'JWT realm="api"')
-
-    @unittest.skipUnless(oauth2_provider, DJANGO_OAUTH2_PROVIDER_NOT_INSTALLED)
-    def test_post_passing_jwt_auth_with_oauth2_priority(self):
-        """
-        Ensure POSTing over JWT auth with correct credentials
-        passes and does not require CSRF when OAuth2Authentication
-        has priority on authentication_classes
-        """
-        payload = utils.jwt_payload_handler(self.user)
-        token = utils.jwt_encode_handler(payload)
-
-        auth = 'JWT {0}'.format(token)
-        response = self.csrf_client.post(
-            '/oauth2-jwt/', {'example': 'example'},
-            HTTP_AUTHORIZATION=auth, format='json')
-
-        self.assertEqual(response.status_code, status.HTTP_200_OK, response)
-
-    @unittest.skipUnless(oauth2_provider, DJANGO_OAUTH2_PROVIDER_NOT_INSTALLED)
-    def test_post_passing_oauth2_with_jwt_auth_priority(self):
-        """
-        Ensure POSTing over OAuth2 with correct credentials
-        passes and does not require CSRF when JSONWebTokenAuthentication
-        has priority on authentication_classes
-        """
-        Client = oauth2_provider.oauth2.models.Client
-        AccessToken = oauth2_provider.oauth2.models.AccessToken
-
-        oauth2_client = Client.objects.create(
-            user=self.user,
-            client_type=0,
-        )
-
-        access_token = AccessToken.objects.create(
-            user=self.user,
-            client=oauth2_client,
-        )
-
-        auth = 'Bearer {0}'.format(access_token.token)
-        response = self.csrf_client.post(
-            '/jwt-oauth2/', {'example': 'example'},
-            HTTP_AUTHORIZATION=auth, format='json')
-
-        self.assertEqual(response.status_code, status.HTTP_200_OK, response)
 
     def test_post_form_passing_jwt_invalid_payload(self):
         """

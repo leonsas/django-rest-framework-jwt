@@ -4,7 +4,7 @@ from calendar import timegm
 from datetime import datetime, timedelta
 
 from django.contrib.auth import authenticate
-from django.utils.translation import ugettext as _
+from django.utils.translation import gettext as _
 from rest_framework import serializers
 from .compat import Serializer
 
@@ -57,7 +57,7 @@ class JSONWebTokenSerializer(Serializer):
             if user:
                 if not user.is_active:
                     msg = _('User account is disabled.')
-                    raise serializers.ValidationError(msg)
+                    raise serializers.ValidationError({'non_field_errors': [str(msg)]})
 
                 payload = jwt_payload_handler(user)
 
@@ -96,7 +96,7 @@ class VerificationBaseSerializer(Serializer):
         # may want to refactor)
         try:
             payload = jwt_decode_handler(token)
-        except jwt.ExpiredSignature:
+        except jwt.ExpiredSignatureError:
             msg = _('Signature has expired.')
             raise serializers.ValidationError(msg)
         except jwt.DecodeError:

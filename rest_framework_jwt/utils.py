@@ -43,7 +43,7 @@ def jwt_encode_handler(payload):
         payload,
         api_settings.JWT_SECRET_KEY,
         api_settings.JWT_ALGORITHM
-    ).decode('utf-8')
+    )
 
 
 def jwt_decode_handler(token):
@@ -54,7 +54,6 @@ def jwt_decode_handler(token):
     return jwt.decode(
         token,
         api_settings.JWT_SECRET_KEY,
-        api_settings.JWT_VERIFY,
         options=options,
         leeway=api_settings.JWT_LEEWAY,
         audience=api_settings.JWT_AUDIENCE,
