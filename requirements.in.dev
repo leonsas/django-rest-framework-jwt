@@ -1,3 +1,6 @@
+# These are the dependencies for the development environment.
+# Not needed for production.
+
 # PEP8 code linting, which we run on all commits.
 flake8==2.4.0
 pep8==1.5.7
@@ -17,9 +20,4 @@ pytest-django>=4.0.0
 pytest-cov>=4.0.0
 freezegun>=1.0.0
 # Mocking the datetime module.
-cryptography>=42.0,<43.0
-
-Django>=3.2.0,<3.3.0
-
-djangorestframework>=3.12,<3.13
-PyJWT>=2.0,<3.0 
+cryptography>=42.0
