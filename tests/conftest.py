@@ -13,20 +13,26 @@ def pytest_configure():
         SITE_ID=1,
         SECRET_KEY='not very secret in tests',
         USE_I18N=True,
-        USE_L10N=True,
         STATIC_URL='/static/',
         ROOT_URLCONF='tests.urls',
-        TEMPLATE_LOADERS=(
-            'django.template.loaders.filesystem.Loader',
-            'django.template.loaders.app_directories.Loader',
-        ),
-        MIDDLEWARE_CLASSES=(
+        TEMPLATES=[
+            {
+                'BACKEND': 'django.template.backends.django.DjangoTemplates',
+                'OPTIONS': {
+                    'loaders': [
+                        'django.template.loaders.filesystem.Loader',
+                        'django.template.loaders.app_directories.Loader',
+                    ],
+                },
+            },
+        ],
+        MIDDLEWARE=[
             'django.middleware.common.CommonMiddleware',
             'django.contrib.sessions.middleware.SessionMiddleware',
             'django.middleware.csrf.CsrfViewMiddleware',
             'django.contrib.auth.middleware.AuthenticationMiddleware',
             'django.contrib.messages.middleware.MessageMiddleware',
-        ),
+        ],
         INSTALLED_APPS=(
             'django.contrib.auth',
             'django.contrib.contenttypes',
@@ -37,9 +43,9 @@ def pytest_configure():
 
             'tests',
         ),
-        PASSWORD_HASHERS=(
+        PASSWORD_HASHERS=[
             'django.contrib.auth.hashers.MD5PasswordHasher',
-        ),
+        ],
     )
 
     try:

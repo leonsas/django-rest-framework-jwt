@@ -14,11 +14,11 @@ coverage==7.8.0
     # via pytest-cov
 cryptography==44.0.2
     # via -r requirements.in
-django==3.2.25
+django==4.2.23
     # via
     #   -r requirements.in
     #   djangorestframework
-djangorestframework==3.12.4
+djangorestframework==3.15.1
     # via -r requirements.in
 exceptiongroup==1.2.2
     # via pytest
@@ -73,8 +73,6 @@ python-dateutil==2.9.0.post0
     # via
     #   freezegun
     #   ghp-import
-pytz==2025.2
-    # via django
 pyyaml==6.0.2
     # via mkdocs
 requests==2.32.3
